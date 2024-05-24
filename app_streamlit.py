@@ -54,12 +54,17 @@ def video_frame_callback(frame):
 
     return av.VideoFrame.from_ndarray(img_with_boxes, format="bgr24")
 
+video_stream_constraints = {
+            "width": {"ideal": 640},  # Lower resolution to reduce bandwidth
+            "height": {"ideal": 480},
+            "frameRate": {"ideal": 15, "max": 30}
+            }
 
 webrtc_streamer(
     key="example",
     video_frame_callback=video_frame_callback,
     async_processing=True,
     rtc_configuration={
-        "iceServers": [{"urls": "stun4.l.google.com:19302"}]},
-    media_stream_constraints={"video": True, "audio": False}
+        "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
+    media_stream_constraints={"video": video_stream_constraints, "audio": False}
 )
