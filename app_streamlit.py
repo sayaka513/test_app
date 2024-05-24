@@ -66,7 +66,6 @@ webrtc_streamer(
     async_processing=True,
     rtc_configuration={
         "iceServers": [{"urls": ["stun:stunserver.org:3478"]},
-                       {"urls": ["stun.xtratelecom.es:3478"]},
                        {"urls": ["stun.wifirst.net:3478"]},
                        ]},
     media_stream_constraints={"video": video_stream_constraints, "audio": False}
