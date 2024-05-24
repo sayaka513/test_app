@@ -3,9 +3,6 @@ from streamlit_webrtc import webrtc_streamer
 import av
 from ultralytics import YOLO
 import cv2
-import json
-import math
-import requests
 
 model = YOLO("best_v8_25.pt")  # Path to the pre-trained YOLOv5 nano model
 
@@ -57,47 +54,6 @@ def video_frame_callback(frame):
 
     return av.VideoFrame.from_ndarray(img_with_boxes, format="bgr24")
 
-# Function to calculate distance between two coordinates
-def calculate_distance(lat1, lon1, lat2, lon2):
-    R = 6371  # Radius of the Earth in km
-    dlat = math.radians(lat2 - lat1)
-    dlon = math.radians(lon2 - lon1)
-    a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-    distance = R * c
-    return distance
-
-# Get the closest STUN server based on user's geolocation
-def get_closest_stun_server():
-    GEO_LOC_URL = "https://raw.githubusercontent.com/pradt2/always-online-stun/master/geoip_cache.txt"
-    IPV4_URL = "https://raw.githubusercontent.com/pradt2/always-online-stun/master/valid_ipv4s.txt"
-    GEO_USER_URL = "https://geolocation-db.com/json/"
-
-    geoLocs = requests.get(GEO_LOC_URL).json()
-    user_location = requests.get(GEO_USER_URL).json()
-    latitude = user_location['latitude']
-    longitude = user_location['longitude']
-
-    stun_servers = requests.get(IPV4_URL).text.strip().split('\n')
-    closest_server = None
-    min_distance = float('inf')
-
-    for server in stun_servers:
-        server_ip = server.split(':')[0]
-        if server_ip in geoLocs:
-            stun_lat, stun_lon = geoLocs[server_ip]
-            distance = calculate_distance(latitude, longitude, stun_lat, stun_lon)
-            if distance < min_distance:
-                min_distance = distance
-                closest_server = server
-
-    return closest_server
-
-# Get the closest STUN server
-closest_stun_server = get_closest_stun_server()
-
-
-
 video_stream_constraints = {
             "width": {"ideal": 640},  # Lower resolution to reduce bandwidth
             "height": {"ideal": 480},
@@ -109,6 +65,10 @@ webrtc_streamer(
     video_frame_callback=video_frame_callback,
     async_processing=True,
     rtc_configuration={
-        "iceServers": [{"urls": f"stun:{closest_stun_server}"}]},
+        "iceServers": [{"urls": ["stun:stunserver.org:3478"]},
+                       {"urls": ["stun.zoiper.com:3478"]},
+                       {"urls": ["stun.xtratelecom.es:3478"]},
+                       {"urls": ["stun.wifirst.net:3478"]},
+                       ]},
     media_stream_constraints={"video": video_stream_constraints, "audio": False}
 )
